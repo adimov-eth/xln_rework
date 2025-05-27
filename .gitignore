@@ -130,12 +130,7 @@ leveldb/
 ehthumbs.db
 Thumbs.db
 
-# Build outputs
-build/
-dist/
-lib/
-es/
-types/
+# Build outputs (moved to end to avoid conflicts)
 
 # Test outputs
 test-results/
@@ -153,15 +148,25 @@ config/production.json
 config/staging.json
 .config
 
-# Blockchain data
-blocks/
-state/
+# XLN runtime data (be specific to avoid conflicts with src/)
+/data/
+/blocks/
+/runtime-state/
 *.blockchain
+/snapshots/
+/leveldb/
 
 # Keys and certificates (security)
 *.key
 *.pem
 *.cert
 *.crt
-private/
-secrets/
+/private/
+/secrets/
+
+# Build outputs (only root level)
+/build/
+/dist/
+/lib/
+/es/
+/generated-types/
