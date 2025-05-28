@@ -1,4 +1,4 @@
-import { FEATURES, LOG_LEVEL, IS_DEVELOPMENT } from './constants';
+import { FEATURES, IS_DEVELOPMENT, LOG_LEVEL } from './constants';
 
 export enum LogLevel {
     ERROR = 0,
@@ -62,8 +62,11 @@ export class Logger {
     }
 
     error(message: string, error?: Error, data?: any): void {
-        this.log(LogLevel.ERROR, message, { error, data });
-    }
+        this.log(LogLevel.ERROR, message, {
+            ...(error && { error }),
+            ...(data !== undefined && { data })
+        });
+    }   
 
     warn(message: string, data?: any): void {
         this.log(LogLevel.WARN, message, { data });
@@ -126,10 +129,10 @@ export class Logger {
             level,
             message,
             timestamp: Date.now(),
-            component: this.config.component,
-            machineId: options.machineId,
-            data: options.data,
-            error: options.error
+            ...(this.config.component && { component: this.config.component }),
+            ...(options.machineId && { machineId: options.machineId }),
+            ...(options.data !== undefined && { data: options.data }),
+            ...(options.error && { error: options.error })
         };
 
         // Add to buffer
@@ -199,19 +202,17 @@ export class Logger {
         }
 
         try {
-            const logLine =
-                JSON.stringify({
-                    ...entry,
-                    error: entry.error
-                        ? {
-                              message: entry.error.message,
-                              stack: entry.error.stack,
-                              name: entry.error.name
-                          }
-                        : undefined
-                }) + '\n';
-
             // File writing would go here
+            // const logLine = JSON.stringify({
+            //     ...entry,
+            //     error: entry.error
+            //         ? {
+            //               message: entry.error.message,
+            //               stack: entry.error.stack,
+            //               name: entry.error.name
+            //           }
+            //         : undefined
+            // }) + '\n';
             // fs.appendFileSync(this.config.filePath!, logLine);
         } catch (error) {
             console.error('Failed to write log to file:', error);

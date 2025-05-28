@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { METRICS_INTERVAL, SLOW_OPERATION_THRESHOLD, MEMORY_WARNING_THRESHOLD } from './constants';
+import { MEMORY_WARNING_THRESHOLD, METRICS_INTERVAL, SLOW_OPERATION_THRESHOLD } from './constants';
 
 export interface Metric {
     name: string;
@@ -34,7 +34,7 @@ export class MetricsCollector extends EventEmitter {
     private gauges: Map<string, number> = new Map();
     private timings: Map<string, number[]> = new Map();
     private isCollecting = false;
-    private intervalId?: NodeJS.Timeout;
+    private intervalId?: NodeJS.Timeout | undefined;
 
     constructor() {
         super();
@@ -74,7 +74,7 @@ export class MetricsCollector extends EventEmitter {
             name,
             value: current + value,
             timestamp: Date.now(),
-            tags
+            ...(tags && { tags })
         });
     }
 
@@ -87,7 +87,7 @@ export class MetricsCollector extends EventEmitter {
             name,
             value,
             timestamp: Date.now(),
-            tags
+            ...(tags && { tags })
         });
     }
 
@@ -117,7 +117,7 @@ export class MetricsCollector extends EventEmitter {
             value: duration,
             duration,
             timestamp: Date.now(),
-            tags
+            ...(tags && { tags })
         });
 
         // Emit warning for slow operations
@@ -139,7 +139,7 @@ export class MetricsCollector extends EventEmitter {
             value,
             buckets,
             timestamp: Date.now(),
-            tags
+            ...(tags && { tags })
         });
     }
 
@@ -244,11 +244,11 @@ export class MetricsCollector extends EventEmitter {
 
         return {
             count,
-            min: sorted[0],
-            max: sorted[count - 1],
+            min: sorted[0]!,
+            max: sorted[count - 1]!,
             avg: sorted.reduce((sum, val) => sum + val, 0) / count,
-            p95: sorted[Math.floor(count * 0.95)],
-            p99: sorted[Math.floor(count * 0.99)]
+            p95: sorted[Math.floor(count * 0.95)]!,
+            p99: sorted[Math.floor(count * 0.99)]!
         };
     }
 
