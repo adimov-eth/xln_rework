@@ -1,35 +1,32 @@
 # XLN Dockerfile - Multi-stage build for production optimization
 
 # Stage 1: Build stage
-FROM node:18-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 
 # Set working directory
 WORKDIR /app
 
 # Install build dependencies
 RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    git
+    git \
+    curl
 
 # Copy package files
-COPY package*.json ./
+COPY package.json ./
+COPY bun.lockb ./
 COPY tsconfig.json ./
 
 # Install dependencies
-RUN npm ci --only=production && \
-    npm ci --only=development
+RUN bun install --frozen-lockfile
 
 # Copy source code
 COPY src/ ./src/
 
 # Build the application
-RUN npm run build && \
-    npm prune --production
+RUN bun run build
 
 # Stage 2: Production stage
-FROM node:18-alpine AS production
+FROM oven/bun:1-alpine AS production
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S xln && \
@@ -46,7 +43,6 @@ RUN apk add --no-cache \
 
 # Copy built application and dependencies
 COPY --from=builder --chown=xln:xln /app/dist ./dist
-COPY --from=builder --chown=xln:xln /app/node_modules ./node_modules
 COPY --from=builder --chown=xln:xln /app/package.json ./
 
 # Copy configuration files
@@ -86,7 +82,7 @@ VOLUME ["/app/data", "/app/logs"]
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start the application
-CMD ["node", "dist/index.js"]
+CMD ["bun", "dist/index.js"]
 
 # Metadata
 LABEL maintainer="XLN Development Team"

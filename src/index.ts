@@ -17,6 +17,7 @@ export class XLNNode {
     private mempool: Mempool;
     private config: ConfigManager;
     private isRunning: boolean = false;
+    private startTime: number = 0;
 
     constructor(config?: ConfigManager) {
         this.config = config || new ConfigManager();
@@ -160,10 +161,55 @@ export class XLNNode {
             const stats = {
                 mempool: this.mempool.getStatistics(),
                 memory: process.memoryUsage(),
+                uptime: this.getUptime(),
                 connections: this.wsServer.getConnectedClients(),
                 signers: this.server.getSigners().length
             };
             callback(null, stats);
+        });
+
+        // Signer management
+        this.restServer.on('api:signer.create', async (params, callback) => {
+            try {
+                const { signerId } = params;
+                const signerIdBuffer = Buffer.from(signerId);
+                const signer = await this.server.createSigner(signerIdBuffer);
+                callback(null, {
+                    signerId: signer.getId().toString('hex'),
+                    publicKey: signer.getPublicKey().toString('hex')
+                });
+            } catch (error) {
+                callback(error, null);
+            }
+        });
+
+        this.restServer.on('api:signer.list', (params, callback) => {
+            try {
+                const signers = this.server.getSigners().map(signer => ({
+                    signerId: signer.getId().toString('hex'),
+                    publicKey: signer.getPublicKey().toString('hex')
+                }));
+                callback(null, { signers });
+            } catch (error) {
+                callback(error, null);
+            }
+        });
+
+        this.restServer.on('api:signer.get', (params, callback) => {
+            try {
+                const { signerId } = params;
+                const signer = this.server.getSigner(Buffer.from(signerId, 'hex'));
+                if (!signer) {
+                    callback(new Error('Signer not found'), null);
+                    return;
+                }
+                callback(null, {
+                    signerId: signer.getId().toString('hex'),
+                    publicKey: signer.getPublicKey().toString('hex')
+                });
+            } catch (error) {
+                callback(error, null);
+            }
         });
     }
 
@@ -171,6 +217,8 @@ export class XLNNode {
         if (this.isRunning) {
             throw new XLNError(ErrorCode.INVALID_PARAMETER, 'Node is already running');
         }
+
+        this.startTime = Date.now();
 
         try {
             // Start core server
@@ -221,6 +269,10 @@ export class XLNNode {
 
     getValidator(): TransactionValidator {
         return this.validator;
+    }
+
+    private getUptime(): number {
+        return this.startTime > 0 ? Date.now() - this.startTime : 0;
     }
 
     getExecutor(): TransactionExecutor {

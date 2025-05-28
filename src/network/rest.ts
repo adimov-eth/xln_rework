@@ -33,21 +33,25 @@ export class XLNRestServer extends EventEmitter {
 
     private setupMiddleware(): void {
         // Security middleware
-        this.app.use(helmet({
-            contentSecurityPolicy: {
-                directives: {
-                    defaultSrc: ["'self'"],
-                    scriptSrc: ["'self'"],
-                    styleSrc: ["'self'", "'unsafe-inline'"]
+        this.app.use(
+            helmet({
+                contentSecurityPolicy: {
+                    directives: {
+                        defaultSrc: ["'self'"],
+                        scriptSrc: ["'self'"],
+                        styleSrc: ["'self'", "'unsafe-inline'"]
+                    }
                 }
-            }
-        }));
+            })
+        );
 
         // CORS
-        this.app.use(cors({
-            origin: process.env.NODE_ENV === 'production' ? false : true,
-            credentials: true
-        }));
+        this.app.use(
+            cors({
+                origin: process.env.NODE_ENV === 'production' ? false : true,
+                credentials: true
+            })
+        );
 
         // Rate limiting
         const limiter = rateLimit({
@@ -186,7 +190,11 @@ export class XLNRestServer extends EventEmitter {
     private async handleCreateEntity(req: Request, res: Response): Promise<void> {
         try {
             const { signerId, entityId, isMultiSig } = req.body;
-            const result = await this.emitAPICall('entity.create', { signerId, entityId, isMultiSig });
+            const result = await this.emitAPICall('entity.create', {
+                signerId,
+                entityId,
+                isMultiSig
+            });
             this.sendResponse(res, result);
         } catch (error) {
             this.sendError(res, 500, 'Failed to create entity', error);
@@ -217,7 +225,12 @@ export class XLNRestServer extends EventEmitter {
         try {
             const { id } = req.params;
             const { type, data, proposer } = req.body;
-            const result = await this.emitAPICall('entity.propose', { entityId: id, type, data, proposer });
+            const result = await this.emitAPICall('entity.propose', {
+                entityId: id,
+                type,
+                data,
+                proposer
+            });
             this.sendResponse(res, result);
         } catch (error) {
             this.sendError(res, 500, 'Failed to create proposal', error);
@@ -228,7 +241,12 @@ export class XLNRestServer extends EventEmitter {
         try {
             const { id, pid } = req.params;
             const { voter, signature } = req.body;
-            const result = await this.emitAPICall('entity.vote', { entityId: id, proposalId: pid, voter, signature });
+            const result = await this.emitAPICall('entity.vote', {
+                entityId: id,
+                proposalId: pid,
+                voter,
+                signature
+            });
             this.sendResponse(res, result);
         } catch (error) {
             this.sendError(res, 500, 'Failed to vote on proposal', error);
@@ -248,7 +266,11 @@ export class XLNRestServer extends EventEmitter {
     private async handleCreateChannel(req: Request, res: Response): Promise<void> {
         try {
             const { entityId, peerEntityId, initialBalance } = req.body;
-            const result = await this.emitAPICall('channel.create', { entityId, peerEntityId, initialBalance });
+            const result = await this.emitAPICall('channel.create', {
+                entityId,
+                peerEntityId,
+                initialBalance
+            });
             this.sendResponse(res, result);
         } catch (error) {
             this.sendError(res, 500, 'Failed to create channel', error);
@@ -269,7 +291,11 @@ export class XLNRestServer extends EventEmitter {
         try {
             const { id } = req.params;
             const { action, params } = req.body;
-            const result = await this.emitAPICall('channel.update', { channelId: id, action, params });
+            const result = await this.emitAPICall('channel.update', {
+                channelId: id,
+                action,
+                params
+            });
             this.sendResponse(res, result);
         } catch (error) {
             this.sendError(res, 500, 'Failed to update channel', error);
@@ -292,7 +318,11 @@ export class XLNRestServer extends EventEmitter {
         try {
             const { id } = req.params;
             const { amount, asset } = req.body;
-            const result = await this.emitAPICall('depositary.deposit', { depositaryId: id, amount, asset });
+            const result = await this.emitAPICall('depositary.deposit', {
+                depositaryId: id,
+                amount,
+                asset
+            });
             this.sendResponse(res, result);
         } catch (error) {
             this.sendError(res, 500, 'Failed to deposit', error);
@@ -303,7 +333,11 @@ export class XLNRestServer extends EventEmitter {
         try {
             const { id } = req.params;
             const { amount, asset } = req.body;
-            const result = await this.emitAPICall('depositary.withdraw', { depositaryId: id, amount, asset });
+            const result = await this.emitAPICall('depositary.withdraw', {
+                depositaryId: id,
+                amount,
+                asset
+            });
             this.sendResponse(res, result);
         } catch (error) {
             this.sendError(res, 500, 'Failed to withdraw', error);

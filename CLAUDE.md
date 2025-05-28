@@ -3,11 +3,11 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Build/Test/Lint Commands
-- Build: `npm run build`
-- Lint: `npm run lint`
-- Test all: `npm test`
-- Test single file: `npm test -- -t "test name"` or `npm test -- path/to/test`
-- Format code: `npm run format`
+- Build: `bun run build`
+- Lint: `bun run lint`
+- Test all: `bun test`
+- Test single file: `bun test test/unit/merkle.test.ts` or `bun test --grep "test name"`
+- Format code: `bun run format`
 
 ## Code Style Guidelines
 - TypeScript with strict typing; avoid `any` types

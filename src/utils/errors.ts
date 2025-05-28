@@ -164,13 +164,15 @@ export function createErrorHandler<T extends any[]>(
 }
 
 // Result type for operations that can fail
-export type Result<T, E = XLNError> = {
-    success: true;
-    data: T;
-} | {
-    success: false;
-    error: E;
-};
+export type Result<T, E = XLNError> =
+    | {
+          success: true;
+          data: T;
+      }
+    | {
+          success: false;
+          error: E;
+      };
 
 export function success<T>(data: T): Result<T> {
     return { success: true, data };

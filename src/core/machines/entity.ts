@@ -220,14 +220,15 @@ export class EntityMachine extends BaseMachine {
     }
 
     private computeEntityStateRoot(): Hash {
-        const stateData = encodeRLP({
+        const stateString = JSON.stringify({
             status: this.entityState.status,
-            nonce: this.entityState.nonce,
+            nonce: this.entityState.nonce.toString(),
             validatorCount: this.entityState.validators.size,
             proposalCount: this.entityState.proposals.size,
             channelCount: this.entityState.channels.size,
             finalBlockNumber: this.entityState.finalBlock.blockNumber
         });
+        const stateData = Buffer.from(stateString);
 
         return keccak256Hash(stateData);
     }

@@ -1,4 +1,10 @@
-import { ServerConfig, TreeConfig, StorageConfig, ConsensusConfig, LimitsConfig } from '../types/core';
+import {
+    ServerConfig,
+    TreeConfig,
+    StorageConfig,
+    ConsensusConfig,
+    LimitsConfig
+} from '../types/core';
 
 export const defaultConfig: ServerConfig = {
     id: 'xln-server-001',
@@ -173,7 +179,7 @@ export class ConfigManager {
         try {
             const fs = require('fs');
             const path = require('path');
-            
+
             // Ensure directory exists
             const dir = path.dirname(filePath);
             if (!fs.existsSync(dir)) {

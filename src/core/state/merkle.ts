@@ -150,9 +150,17 @@ export class MerkleTree {
     }
 
     private splitLeafNode(leafNode: LeafNode): void {
-        const branchNode = this.createBranchNode();
+        // Store the original values before clearing
+        const originalValues = new Map(leafNode.values);
         
-        for (const [path, value] of leafNode.values) {
+        // Clear the leaf node's values and convert it to a branch node
+        delete (leafNode as any).values;
+        (leafNode as any).type = 'branch';
+        (leafNode as any).children = new Map();
+        
+        const branchNode = leafNode as any as BranchNode;
+        
+        for (const [path, value] of originalValues) {
             const { nibbles } = parsePath(path);
             if (nibbles.length > 0) {
                 const chunk = parseInt(nibbles[0], 16);
@@ -168,8 +176,8 @@ export class MerkleTree {
                 this.markDirty(child);
             }
         }
-
-        Object.assign(leafNode, branchNode);
+        
+        this.markDirty(branchNode);
     }
 
     private markDirty(node: MerkleNode): void {

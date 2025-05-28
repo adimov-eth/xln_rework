@@ -62,7 +62,7 @@ export class XLNWebSocketServer extends EventEmitter {
                 console.log(`Client ${clientId} disconnected`);
                 this.clients.delete(clientId);
                 this.subscriptions.delete(clientId);
-                
+
                 // Remove token association
                 for (const [token, id] of this.tokenAuth.entries()) {
                     if (id === clientId) {
@@ -77,7 +77,7 @@ export class XLNWebSocketServer extends EventEmitter {
             });
 
             // Send connection confirmation
-            this.sendResponse(clientId, 'connection', { 
+            this.sendResponse(clientId, 'connection', {
                 clientId,
                 timestamp: Date.now(),
                 version: '1.0.0'
@@ -162,7 +162,7 @@ export class XLNWebSocketServer extends EventEmitter {
 
     private async handleAuthenticate(clientId: string, message: WSMessage): Promise<void> {
         const { token } = message.params;
-        
+
         if (!token) {
             this.sendError(clientId, message.id, 'Token required', -32602);
             return;
@@ -175,7 +175,7 @@ export class XLNWebSocketServer extends EventEmitter {
 
     private async handleSubscribe(clientId: string, message: WSMessage): Promise<void> {
         const { events } = message.params;
-        
+
         if (!Array.isArray(events)) {
             this.sendError(clientId, message.id, 'Events must be an array', -32602);
             return;
@@ -191,7 +191,7 @@ export class XLNWebSocketServer extends EventEmitter {
 
     private async handleUnsubscribe(clientId: string, message: WSMessage): Promise<void> {
         const { events } = message.params;
-        
+
         if (!Array.isArray(events)) {
             this.sendError(clientId, message.id, 'Events must be an array', -32602);
             return;
@@ -253,7 +253,13 @@ export class XLNWebSocketServer extends EventEmitter {
         client.send(JSON.stringify(response));
     }
 
-    sendError(clientId: string, messageId: string, message: string, code: number, data?: any): void {
+    sendError(
+        clientId: string,
+        messageId: string,
+        message: string,
+        code: number,
+        data?: any
+    ): void {
         const client = this.clients.get(clientId);
         if (!client) return;
 

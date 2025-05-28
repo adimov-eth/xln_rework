@@ -46,12 +46,18 @@ export class Logger {
 
     private parseLogLevel(level: string): LogLevel {
         switch (level.toLowerCase()) {
-            case 'error': return LogLevel.ERROR;
-            case 'warn': return LogLevel.WARN;
-            case 'info': return LogLevel.INFO;
-            case 'debug': return LogLevel.DEBUG;
-            case 'trace': return LogLevel.TRACE;
-            default: return LogLevel.INFO;
+            case 'error':
+                return LogLevel.ERROR;
+            case 'warn':
+                return LogLevel.WARN;
+            case 'info':
+                return LogLevel.INFO;
+            case 'debug':
+                return LogLevel.DEBUG;
+            case 'trace':
+                return LogLevel.TRACE;
+            default:
+                return LogLevel.INFO;
         }
     }
 
@@ -103,11 +109,15 @@ export class Logger {
         });
     }
 
-    private log(level: LogLevel, message: string, options: {
-        error?: Error;
-        data?: any;
-        machineId?: string;
-    } = {}): void {
+    private log(
+        level: LogLevel,
+        message: string,
+        options: {
+            error?: Error;
+            data?: any;
+            machineId?: string;
+        } = {}
+    ): void {
         if (level > this.config.level) {
             return;
         }
@@ -149,7 +159,7 @@ export class Logger {
         const component = entry.component ? `[${entry.component}]` : '';
         const machineId = entry.machineId ? `{${entry.machineId.substring(0, 8)}}` : '';
         const level = LogLevel[entry.level].padEnd(5);
-        
+
         let message = `${timestamp} ${level} ${component}${machineId} ${entry.message}`;
 
         if (entry.data && FEATURES.ENABLE_DEBUG_LOGS) {
@@ -189,14 +199,17 @@ export class Logger {
         }
 
         try {
-            const logLine = JSON.stringify({
-                ...entry,
-                error: entry.error ? {
-                    message: entry.error.message,
-                    stack: entry.error.stack,
-                    name: entry.error.name
-                } : undefined
-            }) + '\n';
+            const logLine =
+                JSON.stringify({
+                    ...entry,
+                    error: entry.error
+                        ? {
+                              message: entry.error.message,
+                              stack: entry.error.stack,
+                              name: entry.error.name
+                          }
+                        : undefined
+                }) + '\n';
 
             // File writing would go here
             // fs.appendFileSync(this.config.filePath!, logLine);
@@ -211,7 +224,7 @@ export class Logger {
         if (entry.data?.type === 'performance') {
             // Record performance metrics
         }
-        
+
         if (entry.level === LogLevel.ERROR) {
             // Increment error counter
         }
@@ -222,15 +235,11 @@ export class Logger {
     }
 
     getLogsByLevel(level: LogLevel, count: number = 100): LogEntry[] {
-        return this.logBuffer
-            .filter(entry => entry.level === level)
-            .slice(-count);
+        return this.logBuffer.filter((entry) => entry.level === level).slice(-count);
     }
 
     getLogsByComponent(component: string, count: number = 100): LogEntry[] {
-        return this.logBuffer
-            .filter(entry => entry.component === component)
-            .slice(-count);
+        return this.logBuffer.filter((entry) => entry.component === component).slice(-count);
     }
 
     createChildLogger(component: string): Logger {
@@ -304,26 +313,26 @@ export function createMachineLogger(machineType: string, machineId: string): Log
         component: machineType,
         level: LogLevel.DEBUG
     });
-    
+
     // Add machine ID to all logs from this logger
     const originalLog = (logger as any).log.bind(logger);
-    (logger as any).log = function(level: LogLevel, message: string, options: any = {}) {
+    (logger as any).log = function (level: LogLevel, message: string, options: any = {}) {
         return originalLog(level, message, {
             ...options,
             machineId: machineId
         });
     };
-    
+
     return logger;
 }
 
 export function logExecutionTime(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
-    
-    descriptor.value = async function(...args: any[]) {
+
+    descriptor.value = async function (...args: any[]) {
         const start = Date.now();
         const className = this.constructor.name;
-        
+
         try {
             const result = await originalMethod.apply(this, args);
             const duration = Date.now() - start;
@@ -335,6 +344,6 @@ export function logExecutionTime(target: any, propertyKey: string, descriptor: P
             throw error;
         }
     };
-    
+
     return descriptor;
 }

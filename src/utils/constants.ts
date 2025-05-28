@@ -111,17 +111,17 @@ export const MESSAGE_TYPES = {
     SIGNER_TRANSACTION: 0x01,
     ENTITY_TRANSACTION: 0x02,
     CHANNEL_MESSAGE: 0x03,
-    
+
     // Consensus messages
     PROPOSE_BLOCK: 0x10,
     VOTE_BLOCK: 0x11,
     COMMIT_BLOCK: 0x12,
-    
+
     // Channel protocol
     CHANNEL_UPDATE: 0x20,
     CHANNEL_ACK: 0x21,
     CHANNEL_CLOSE: 0x22,
-    
+
     // System messages
     PING: 0x30,
     PONG: 0x31,
@@ -152,30 +152,30 @@ export const EVENTS = {
     MACHINE_STARTED: 'machine:started',
     MACHINE_STOPPED: 'machine:stopped',
     MACHINE_ERROR: 'machine:error',
-    
+
     // Block events
     BLOCK_CREATED: 'block:created',
     BLOCK_FINALIZED: 'block:finalized',
-    
+
     // Transaction events
     TRANSACTION_RECEIVED: 'transaction:received',
     TRANSACTION_VALIDATED: 'transaction:validated',
     TRANSACTION_EXECUTED: 'transaction:executed',
     TRANSACTION_FAILED: 'transaction:failed',
-    
+
     // Channel events
     CHANNEL_OPENED: 'channel:opened',
     CHANNEL_UPDATED: 'channel:updated',
     CHANNEL_CLOSED: 'channel:closed',
     PAYMENT_SENT: 'payment:sent',
     PAYMENT_RECEIVED: 'payment:received',
-    
+
     // Entity events
     ENTITY_CREATED: 'entity:created',
     PROPOSAL_CREATED: 'proposal:created',
     PROPOSAL_VOTED: 'proposal:voted',
     PROPOSAL_EXECUTED: 'proposal:executed',
-    
+
     // Network events
     CLIENT_CONNECTED: 'client:connected',
     CLIENT_DISCONNECTED: 'client:disconnected',

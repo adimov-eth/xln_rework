@@ -61,7 +61,7 @@ async function basicUsageExample() {
         console.log('\nAPI endpoints available:');
         console.log('- REST API: http://localhost:8080/api/v1/');
         console.log('- WebSocket: ws://localhost:8081/api/v1/ws');
-        
+
         console.log('\nExample REST API calls:');
         console.log('- GET /api/v1/server/status');
         console.log('- GET /api/v1/server/stats');
@@ -71,10 +71,9 @@ async function basicUsageExample() {
 
         // Wait a bit to see some blocks
         console.log('\nWaiting for blocks...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         console.log(`Current block number: ${node.getServer().getBlockNumber()}`);
-
     } catch (error) {
         console.error('Error during example:', error);
     } finally {
@@ -89,14 +88,14 @@ async function channelPaymentExample() {
     console.log('\n=== Channel Payment Flow Example ===\n');
 
     const node = new XLNNode();
-    
+
     try {
         await node.start();
 
         // Create two entities
         const signerA = await node.createTestSigner();
         const signerB = await node.createTestSigner();
-        
+
         const entityA = await node.createTestEntity(signerA.getId());
         const entityB = await node.createTestEntity(signerB.getId());
 
@@ -118,12 +117,12 @@ async function channelPaymentExample() {
 
         // Make multiple payments
         console.log('\nMaking payments...');
-        
+
         for (let i = 1; i <= 3; i++) {
             const amount = BigInt('50000000000000000'); // 0.05 ETH
             const result = await channel.makePayment('ETH', amount, entityB.getId());
             console.log(`Payment ${i}: ${result ? 'Success' : 'Failed'} - ${amount} wei`);
-            
+
             const balance = channel.getBalance('ETH');
             console.log(`  Channel balance:`, balance);
         }
@@ -145,7 +144,6 @@ async function channelPaymentExample() {
         // Check available capacity
         const capacity = channel.getAvailableCapacity('ETH', entityA.getId());
         console.log(`Available capacity for Entity A: ${capacity} wei`);
-
     } catch (error) {
         console.error('Error during channel example:', error);
     } finally {
@@ -157,7 +155,7 @@ async function merkleTreeExample() {
     console.log('\n=== Merkle Tree Example ===\n');
 
     const node = new XLNNode();
-    
+
     try {
         await node.start();
 
@@ -169,7 +167,7 @@ async function merkleTreeExample() {
         for (let i = 0; i < 5; i++) {
             const testEntity = await node.createTestEntity(signer.getId());
             testEntity.setBalance('ETH', BigInt(i * 1000000000000000000n)); // i ETH
-            
+
             if (i > 0) {
                 await testEntity.createChannel(entity.getId(), BigInt(500000000000000000n));
             }
@@ -180,7 +178,7 @@ async function merkleTreeExample() {
 
         console.log('Merkle tree visualization:');
         console.log('(This would show the hierarchical state structure)');
-        
+
         const serverRoot = node.getServer().getStateRoot();
         console.log(`Server state root: ${serverRoot.toString('hex')}`);
 
@@ -189,7 +187,6 @@ async function merkleTreeExample() {
         console.log('- Number of entities per signer');
         console.log('- Number of channels per entity');
         console.log('- Tree depth and branching factor');
-
     } catch (error) {
         console.error('Error during merkle tree example:', error);
     } finally {
@@ -211,8 +208,4 @@ if (require.main === module) {
     })();
 }
 
-export {
-    basicUsageExample,
-    channelPaymentExample,
-    merkleTreeExample
-};
+export { basicUsageExample, channelPaymentExample, merkleTreeExample };

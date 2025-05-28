@@ -1,14 +1,44 @@
 import { encode as rlpEncode, decode as rlpDecode } from 'rlp';
 
 export function encodeRLP(data: any): Buffer {
-    return Buffer.from(rlpEncode(data));
+    // Convert complex data types to RLP-serializable format
+    const serializable = convertToSerializable(data);
+    return Buffer.from(rlpEncode(serializable));
+}
+
+function convertToSerializable(data: any): any {
+    if (Buffer.isBuffer(data)) {
+        return data;
+    }
+    if (data instanceof Map) {
+        return Array.from(data.entries());
+    }
+    if (Array.isArray(data)) {
+        return data.map(convertToSerializable);
+    }
+    if (data && typeof data === 'object') {
+        const result: any = {};
+        for (const [key, value] of Object.entries(data)) {
+            result[key] = convertToSerializable(value);
+        }
+        return result;
+    }
+    if (typeof data === 'bigint') {
+        return data.toString();
+    }
+    return data;
 }
 
 export function decodeRLP(data: Buffer): any {
     return rlpDecode(data);
 }
 
-export function createMachineId(serverId: Buffer, signerId: Buffer, entityId: Buffer, submachineId: Buffer): Buffer {
+export function createMachineId(
+    serverId: Buffer,
+    signerId: Buffer,
+    entityId: Buffer,
+    submachineId: Buffer
+): Buffer {
     const id = Buffer.alloc(32);
     serverId.copy(id, 0, 0, 8);
     signerId.copy(id, 8, 0, 8);
@@ -34,14 +64,14 @@ export function parseMachineId(id: Buffer): {
 export function pathToNibbles(path: Buffer, bitWidth: number = 4): string {
     const nibbles: string[] = [];
     const mask = (1 << bitWidth) - 1;
-    
+
     for (const byte of path) {
         for (let i = 8 - bitWidth; i >= 0; i -= bitWidth) {
             const nibble = (byte >> i) & mask;
             nibbles.push(nibble.toString(16));
         }
     }
-    
+
     return nibbles.join('');
 }
 
@@ -49,23 +79,23 @@ export function nibblesToPath(nibbles: string, bitWidth: number = 4): Buffer {
     const bytes: number[] = [];
     let currentByte = 0;
     let bitsInByte = 0;
-    
+
     for (const nibbleChar of nibbles) {
         const nibble = parseInt(nibbleChar, 16);
         currentByte = (currentByte << bitWidth) | nibble;
         bitsInByte += bitWidth;
-        
+
         if (bitsInByte >= 8) {
             bytes.push(currentByte);
             currentByte = 0;
             bitsInByte = 0;
         }
     }
-    
+
     if (bitsInByte > 0) {
         bytes.push(currentByte << (8 - bitsInByte));
     }
-    
+
     return Buffer.from(bytes);
 }
 

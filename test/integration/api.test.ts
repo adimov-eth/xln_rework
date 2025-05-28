@@ -1,7 +1,31 @@
-import request from 'supertest';
+import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from 'bun:test';
 import WebSocket from 'ws';
 import XLNNode from '../../src/index';
 import { ConfigManager } from '../../src/utils/config';
+
+// Simple HTTP request function to replace supertest
+async function request(url: string) {
+    const response = await fetch(url, { method: 'GET' });
+    const body = await response.json();
+    return {
+        status: response.status,
+        body
+    };
+}
+
+// HTTP request with method and data
+async function requestWithData(url: string, method: string, data?: any) {
+    const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: data ? JSON.stringify(data) : undefined
+    });
+    const body = await response.json();
+    return {
+        status: response.status,
+        body
+    };
+}
 
 describe('API Integration Tests', () => {
     let node: XLNNode;
@@ -24,9 +48,8 @@ describe('API Integration Tests', () => {
         const baseUrl = 'http://localhost:9000/api/v1';
 
         test('should get server status', async () => {
-            const response = await request(baseUrl)
-                .get('/server/status')
-                .expect(200);
+            const response = await request(baseUrl + '/server/status');
+            expect(response.status).toBe(200);
 
             expect(response.body.success).toBe(true);
             expect(response.body.data).toHaveProperty('status');
@@ -35,9 +58,8 @@ describe('API Integration Tests', () => {
         });
 
         test('should get server stats', async () => {
-            const response = await request(baseUrl)
-                .get('/server/stats')
-                .expect(200);
+            const response = await request(baseUrl + '/server/stats');
+            expect(response.status).toBe(200);
 
             expect(response.body.success).toBe(true);
             expect(response.body.data).toHaveProperty('mempool');
@@ -46,12 +68,10 @@ describe('API Integration Tests', () => {
         });
 
         test('should create signer', async () => {
-            const response = await request(baseUrl)
-                .post('/signers')
-                .send({
-                    signerId: 'test-signer-001'
-                })
-                .expect(200);
+            const response = await requestWithData(baseUrl + '/signers', 'POST', {
+                signerId: 'test-signer-001'
+            });
+            expect(response.status).toBe(200);
 
             expect(response.body.success).toBe(true);
             expect(response.body.data).toHaveProperty('signerId');
@@ -60,22 +80,18 @@ describe('API Integration Tests', () => {
 
         test('should create entity', async () => {
             // First create a signer
-            const signerResponse = await request(baseUrl)
-                .post('/signers')
-                .send({
-                    signerId: 'test-signer-002'
-                });
+            const signerResponse = await requestWithData(baseUrl + '/signers', 'POST', {
+                signerId: 'test-signer-002'
+            });
 
             const signerId = signerResponse.body.data.signerId;
 
-            const response = await request(baseUrl)
-                .post('/entities')
-                .send({
-                    signerId,
-                    entityId: 'test-entity-001',
-                    isMultiSig: false
-                })
-                .expect(200);
+            const response = await requestWithData(baseUrl + '/entities', 'POST', {
+                signerId,
+                entityId: 'test-entity-001',
+                isMultiSig: false
+            });
+            expect(response.status).toBe(200);
 
             expect(response.body.success).toBe(true);
             expect(response.body.data).toHaveProperty('entityId');
@@ -84,60 +100,47 @@ describe('API Integration Tests', () => {
 
         test('should create channel', async () => {
             // Create signers and entities
-            const signer1Response = await request(baseUrl)
-                .post('/signers')
-                .send({ signerId: 'test-signer-003' });
+            const signer1Response = await requestWithData(baseUrl + '/signers', 'POST', { signerId: 'test-signer-003' });
             
-            const signer2Response = await request(baseUrl)
-                .post('/signers')
-                .send({ signerId: 'test-signer-004' });
+            const signer2Response = await requestWithData(baseUrl + '/signers', 'POST', { signerId: 'test-signer-004' });
 
-            const entity1Response = await request(baseUrl)
-                .post('/entities')
-                .send({
-                    signerId: signer1Response.body.data.signerId,
-                    entityId: 'test-entity-002',
-                    isMultiSig: false
-                });
+            const entity1Response = await requestWithData(baseUrl + '/entities', 'POST', {
+                signerId: signer1Response.body.data.signerId,
+                entityId: 'test-entity-002',
+                isMultiSig: false
+            });
 
-            const entity2Response = await request(baseUrl)
-                .post('/entities')
-                .send({
-                    signerId: signer2Response.body.data.signerId,
-                    entityId: 'test-entity-003',
-                    isMultiSig: false
-                });
+            const entity2Response = await requestWithData(baseUrl + '/entities', 'POST', {
+                signerId: signer2Response.body.data.signerId,
+                entityId: 'test-entity-003',
+                isMultiSig: false
+            });
 
-            const response = await request(baseUrl)
-                .post('/channels')
-                .send({
-                    entityId: entity1Response.body.data.entityId,
-                    peerEntityId: entity2Response.body.data.entityId,
-                    initialBalance: '1000000000000000000' // 1 ETH
-                })
-                .expect(200);
+            const response = await requestWithData(baseUrl + '/channels', 'POST', {
+                entityId: entity1Response.body.data.entityId,
+                peerEntityId: entity2Response.body.data.entityId,
+                initialBalance: '1000000000000000000' // 1 ETH
+            });
+            expect(response.status).toBe(200);
 
             expect(response.body.success).toBe(true);
             expect(response.body.data).toHaveProperty('channelId');
         });
 
         test('should handle errors gracefully', async () => {
-            const response = await request(baseUrl)
-                .get('/non-existent-endpoint')
-                .expect(404);
+            const response = await request(baseUrl + '/non-existent-endpoint');
+            expect(response.status).toBe(404);
 
             expect(response.body.success).toBe(false);
             expect(response.body.error).toHaveProperty('code', 404);
         });
 
         test('should validate request parameters', async () => {
-            const response = await request(baseUrl)
-                .post('/entities')
-                .send({
-                    // Missing required signerId
-                    entityId: 'test-entity-invalid'
-                })
-                .expect(500);
+            const response = await requestWithData(baseUrl + '/entities', 'POST', {
+                // Missing required signerId
+                entityId: 'test-entity-invalid'
+            });
+            expect(response.status).toBe(500);
 
             expect(response.body.success).toBe(false);
             expect(response.body.error).toBeDefined();
@@ -277,11 +280,9 @@ describe('API Integration Tests', () => {
     describe('Cross-API Consistency', () => {
         test('should maintain data consistency between REST and WebSocket APIs', async () => {
             // Create signer via REST
-            const restResponse = await request('http://localhost:9000/api/v1')
-                .post('/signers')
-                .send({
-                    signerId: 'consistency-test-signer'
-                });
+            const restResponse = await requestWithData('http://localhost:9000/api/v1/signers', 'POST', {
+                signerId: 'consistency-test-signer'
+            });
 
             const signerId = restResponse.body.data.signerId;
 
@@ -323,8 +324,7 @@ describe('API Integration Tests', () => {
             // Make many requests quickly
             for (let i = 0; i < 20; i++) {
                 requests.push(
-                    request('http://localhost:9000/api/v1')
-                        .get('/server/status')
+                    request('http://localhost:9000/api/v1/server/status')
                 );
             }
 
@@ -362,11 +362,9 @@ describe('API Integration Tests', () => {
         test('should handle server errors gracefully', async () => {
             // This would test server error scenarios
             // For now, just ensure the API doesn't crash
-            const response = await request('http://localhost:9000/api/v1')
-                .post('/signers')
-                .send({
-                    signerId: null // Invalid data that might cause server error
-                });
+            const response = await requestWithData('http://localhost:9000/api/v1/signers', 'POST', {
+                signerId: null // Invalid data that might cause server error
+            });
 
             // Should get an error response, not a crash
             expect(response.status).toBeGreaterThanOrEqual(400);

@@ -191,11 +191,20 @@ export class ChannelMachine extends BaseMachine {
     }
 
     getStateRoot(): Hash {
-        const stateData = encodeRLP({
-            id: this.channelState.id,
-            participants: this.channelState.participants,
-            balances: Array.from(this.channelState.balances.entries()),
-            nonce: this.channelState.nonce,
+        // Simple deterministic state root computation
+        const balancesObj: any = {};
+        for (const [key, value] of this.channelState.balances.entries()) {
+            balancesObj[key] = {
+                left: value.left.toString(),
+                right: value.right.toString()
+            };
+        }
+
+        const stateString = JSON.stringify({
+            id: this.channelState.id.toString('hex'),
+            participants: this.channelState.participants.map(p => p.toString('hex')),
+            balances: balancesObj,
+            nonce: this.channelState.nonce.toString(),
             status: this.channelState.status,
             collateral: this.channelState.collateral.toString(),
             creditLimits: {
@@ -206,7 +215,7 @@ export class ChannelMachine extends BaseMachine {
             offdelta: this.channelState.offdelta.toString()
         });
 
-        return keccak256Hash(stateData);
+        return keccak256Hash(Buffer.from(stateString));
     }
 
     canReceive(asset: string, amount: bigint, participant: Buffer): boolean {

@@ -42,7 +42,7 @@ export class MetricsCollector extends EventEmitter {
 
     start(): void {
         if (this.isCollecting) return;
-        
+
         this.isCollecting = true;
         this.intervalId = setInterval(() => {
             this.collectSystemMetrics();
@@ -54,7 +54,7 @@ export class MetricsCollector extends EventEmitter {
 
     stop(): void {
         if (!this.isCollecting) return;
-        
+
         this.isCollecting = false;
         if (this.intervalId) {
             clearInterval(this.intervalId);
@@ -68,7 +68,7 @@ export class MetricsCollector extends EventEmitter {
     incrementCounter(name: string, value: number = 1, tags?: Record<string, string>): void {
         const current = this.counters.get(name) || 0;
         this.counters.set(name, current + value);
-        
+
         this.recordMetric({
             type: 'counter',
             name,
@@ -81,7 +81,7 @@ export class MetricsCollector extends EventEmitter {
     // Gauge methods
     setGauge(name: string, value: number, tags?: Record<string, string>): void {
         this.gauges.set(name, value);
-        
+
         this.recordMetric({
             type: 'gauge',
             name,
@@ -102,10 +102,10 @@ export class MetricsCollector extends EventEmitter {
         if (!this.timings.has(name)) {
             this.timings.set(name, []);
         }
-        
+
         const timings = this.timings.get(name)!;
         timings.push(duration);
-        
+
         // Keep only last 1000 timings
         if (timings.length > 1000) {
             timings.shift();
@@ -127,7 +127,12 @@ export class MetricsCollector extends EventEmitter {
     }
 
     // Histogram methods
-    recordHistogram(name: string, value: number, buckets: number[], tags?: Record<string, string>): void {
+    recordHistogram(
+        name: string,
+        value: number,
+        buckets: number[],
+        tags?: Record<string, string>
+    ): void {
         this.recordMetric({
             type: 'histogram',
             name,
@@ -197,10 +202,10 @@ export class MetricsCollector extends EventEmitter {
         if (!this.metrics.has(metric.name)) {
             this.metrics.set(metric.name, []);
         }
-        
+
         const metricArray = this.metrics.get(metric.name)!;
         metricArray.push(metric);
-        
+
         // Keep only last 1000 metrics per name
         if (metricArray.length > 1000) {
             metricArray.shift();
@@ -236,7 +241,7 @@ export class MetricsCollector extends EventEmitter {
 
         const sorted = [...timings].sort((a, b) => a - b);
         const count = sorted.length;
-        
+
         return {
             count,
             min: sorted[0],
@@ -272,10 +277,10 @@ export class MetricsCollector extends EventEmitter {
 
     // Clear old metrics
     clearMetrics(olderThan?: number): void {
-        const cutoff = olderThan || (Date.now() - 24 * 60 * 60 * 1000); // 24 hours
+        const cutoff = olderThan || Date.now() - 24 * 60 * 60 * 1000; // 24 hours
 
         for (const [name, metricArray] of this.metrics) {
-            const filtered = metricArray.filter(metric => metric.timestamp > cutoff);
+            const filtered = metricArray.filter((metric) => metric.timestamp > cutoff);
             this.metrics.set(name, filtered);
         }
     }
@@ -283,19 +288,19 @@ export class MetricsCollector extends EventEmitter {
     // Export metrics in Prometheus format
     toPrometheusFormat(): string {
         const lines: string[] = [];
-        
+
         // Counters
         for (const [name, value] of this.counters) {
             lines.push(`# TYPE ${name} counter`);
             lines.push(`${name} ${value}`);
         }
-        
+
         // Gauges
         for (const [name, value] of this.gauges) {
             lines.push(`# TYPE ${name} gauge`);
             lines.push(`${name} ${value}`);
         }
-        
+
         // Timing histograms
         for (const [name] of this.timings) {
             const stats = this.getTimingStats(name);
@@ -310,13 +315,13 @@ export class MetricsCollector extends EventEmitter {
                 lines.push(`${name}_bucket{le="+Inf"} ${stats.count}`);
             }
         }
-        
+
         return lines.join('\n');
     }
 
     private countTimingsInBucket(name: string, threshold: number): number {
         const timings = this.timings.get(name) || [];
-        return timings.filter(timing => timing <= threshold).length;
+        return timings.filter((timing) => timing <= threshold).length;
     }
 }
 
@@ -345,9 +350,9 @@ export class XLNMetrics {
     }
 
     recordTransactionProcessed(type: string, success: boolean): void {
-        this.collector.incrementCounter('xln.transactions.processed', 1, { 
-            type, 
-            status: success ? 'success' : 'failed' 
+        this.collector.incrementCounter('xln.transactions.processed', 1, {
+            type,
+            status: success ? 'success' : 'failed'
         });
     }
 
@@ -373,8 +378,8 @@ export class XLNMetrics {
     }
 
     recordChannelClosed(cooperative: boolean): void {
-        this.collector.incrementCounter('xln.channels.closed', 1, { 
-            type: cooperative ? 'cooperative' : 'forced' 
+        this.collector.incrementCounter('xln.channels.closed', 1, {
+            type: cooperative ? 'cooperative' : 'forced'
         });
         this.collector.adjustGauge('xln.channels.active', -1);
     }
@@ -401,9 +406,9 @@ export class XLNMetrics {
     }
 
     recordAPIRequest(method: string, status: number, duration: number): void {
-        this.collector.incrementCounter('xln.api.requests', 1, { 
-            method, 
-            status: status.toString() 
+        this.collector.incrementCounter('xln.api.requests', 1, {
+            method,
+            status: status.toString()
         });
         this.collector.recordTiming('xln.api.request_duration', duration, { method });
     }
@@ -433,29 +438,29 @@ export const xlnMetrics = new XLNMetrics(metricsCollector);
 
 // Decorator for automatic method timing
 export function measureTime(metricName?: string) {
-    return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         const originalMethod = descriptor.value;
         const name = metricName || `${target.constructor.name}.${propertyKey}`;
-        
-        descriptor.value = async function(...args: any[]) {
+
+        descriptor.value = async function (...args: any[]) {
             return metricsCollector.time(name, () => originalMethod.apply(this, args));
         };
-        
+
         return descriptor;
     };
 }
 
 // Decorator for counting method calls
 export function countCalls(metricName?: string) {
-    return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         const originalMethod = descriptor.value;
         const name = metricName || `${target.constructor.name}.${propertyKey}.calls`;
-        
-        descriptor.value = function(...args: any[]) {
+
+        descriptor.value = function (...args: any[]) {
             metricsCollector.incrementCounter(name);
             return originalMethod.apply(this, args);
         };
-        
+
         return descriptor;
     };
 }
