@@ -1,7 +1,0 @@
-[test]
-preload = ["./test/setup.ts"]
-timeout = 30000
-
-[install]
-cache = true
-registry = "https://registry.npmjs.org/"
